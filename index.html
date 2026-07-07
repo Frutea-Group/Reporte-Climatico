@@ -4,6 +4,27 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Reporte Climático FRUTEA</title>
+<script>
+// Parche: ignorar cambios de alto solos en ResizeObserver (address bar móvil)
+(function() {
+  const _RO = window.ResizeObserver;
+  const _widths = new WeakMap();
+  window.ResizeObserver = class extends _RO {
+    constructor(cb) {
+      super(entries => {
+        const relevant = entries.filter(e => {
+          const prev = _widths.get(e.target) ?? -1;
+          const cur  = Math.round(e.contentRect.width);
+          if (Math.abs(cur - prev) < 2) return false;
+          _widths.set(e.target, cur);
+          return true;
+        });
+        if (relevant.length) cb(relevant);
+      });
+    }
+  };
+})();
+</script>
 <script src="chart.umd.js"></script>
 <style>
 :root{color-scheme:light}
@@ -865,8 +886,19 @@ function estimateVarietyDate(station, field) {
 
   const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   const fmtDate = d => d.getDate() + ' de ' + meses[d.getMonth()];
+  const fmtTick = lbl => { const [d,m] = lbl.split('/'); return parseInt(d)+' de '+meses[parseInt(m)-1]+' de '+curYear; };
   const unit = field === 'hf' ? 'horas' : 'porciones';
   const curYear = parseInt(curSeason);
+
+  // Buscar primer tick donde se alcanzó un target
+  const findFulfillmentDate = target => {
+    const arr = sd[curSeason]?.[field];
+    if (!arr) return null;
+    for (let i = 0; i < D.tick_labels.length; i++) {
+      if (arr[i] != null && arr[i] >= target) return fmtTick(D.tick_labels[i]);
+    }
+    return null;
+  };
 
   // Parse last tick date
   const [dd, mm] = lastTickLbl.split('/');
@@ -888,14 +920,16 @@ function estimateVarietyDate(station, field) {
 
   // Si es rango y el máximo ya se superó, mostrar una sola línea
   if (vcfg.max != null && curVal >= vcfg.max) {
+    const fechaCumplido = findFulfillmentDate(vcfg.max);
     el.className = 'variety-est show';
-    el.innerHTML = `<div class="vest-row"><span class="vest-ok">✓ Requerimiento cumplido</span></div>`;
+    el.innerHTML = `<div class="vest-row"><span class="vest-ok">✓ Requerimiento cumplido${fechaCumplido ? ' (el ' + fechaCumplido + ')' : ''}</span></div>`;
     return;
   }
 
   for (const t of targets) {
     if (curVal >= t.val) {
-      html += `<div class="vest-row"><span class="vest-ok">✓ Requerimiento ${t.label} cumplido</span></div>`;
+      const fechaCumplido = findFulfillmentDate(t.val);
+      html += `<div class="vest-row"><span class="vest-ok">✓ Requerimiento${t.label ? ' ' + t.label : ''} cumplido${fechaCumplido ? ' (el ' + fechaCumplido + ')' : ''}</span></div>`;
       continue;
     }
     if (!ratePerDay || ratePerDay <= 0) {
