@@ -220,8 +220,23 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
     <div class="pr-subtitle" id="pr-drill-label"></div>
     <div class="bar-wrap" id="wrap-pr"><canvas id="ch-pr"></canvas></div>
     <div class="stats">
-      <div class="st"><div class="sv" id="pr-cur">—</div><div class="sl" id="pr-cur-lbl">Temporada actual</div></div>
-      <div class="st"><div class="sv" id="pr-max">—</div><div class="sl" id="pr-max-lbl">Promedio histórico</div></div>
+      <div class="st">
+        <div class="sn-lbl">Temporada actual</div>
+        <div class="sn-val" id="pr-cur">—</div>
+        <div class="sn-sub" id="pr-cur-lbl">—</div>
+      </div>
+      <div class="st">
+        <div class="sn-lbl">Promedio histórico</div>
+        <div class="sn-val" id="pr-avg">—</div>
+        <div class="sn-sub" id="pr-avg-pct">—</div>
+        <div class="sn-date" id="pr-avg-lbl">—</div>
+      </div>
+      <div class="st">
+        <div class="sn-lbl">Máximo histórico</div>
+        <div class="sn-val" id="pr-max">—</div>
+        <div class="sn-sub" id="pr-max-season">—</div>
+        <div class="sn-date" id="pr-max-lbl">—</div>
+      </div>
     </div>
   </div>
 
@@ -904,25 +919,52 @@ function updatePrecipStats(station) {
   const prSeason = prInfo && prInfo.season;
   const prMonth  = prInfo && prInfo.month;
   const prLabel  = prInfo && prInfo.label;
+  const shortLabel = prLabel ? prLabel.replace(/\s+de\s+\d{4}$/, '') : '—';
+
+  // Acumulado temporada actual
   let cur = null;
   if (prSeason && prMonth && D.precip_monthly_all[station] && D.precip_monthly_all[station][prSeason]) {
     cur = D.precip_monthly_all[station][prSeason].slice(0, prMonth).reduce((a,v)=>a+(v||0), 0);
   }
-  let avgVals = [];
+
+  // Promedio histórico y máximo al mismo corte de fecha — todas las temporadas con registro
+  let avgVals = [], max = null, maxSeason = null;
   if (prMonth) {
     D.all_seasons.forEach(s => {
       const pm = D.precip_monthly_all[station];
       if (!pm || !pm[s]) return;
       const t = pm[s].slice(0, prMonth).reduce((a,v)=>a+(v||0), 0);
-      if (t > 0) avgVals.push(t);
+      if (t > 0) {
+        avgVals.push(t);
+        if (max == null || t > max) { max = t; maxSeason = s; }
+      }
     });
   }
   const avg = avgVals.length ? avgVals.reduce((a,b)=>a+b,0)/avgVals.length : null;
-  const fechaLabel = prLabel || '—';
-  document.getElementById('pr-cur').textContent = cur!=null ? Math.round(cur).toLocaleString('es-CL')+' mm' : '—';
-  document.getElementById('pr-max').textContent = avg!=null ? Math.round(avg).toLocaleString('es-CL')+' mm' : '—';
-  document.getElementById('pr-cur-lbl').innerHTML = 'Acumulado al<br><span style="font-size:9px">'+fechaLabel+'</span>';
-  document.getElementById('pr-max-lbl').innerHTML = 'Promedio histórico al<br><span style="font-size:9px">'+fechaLabel.replace(/\s+de\s+\d{4}$/,'')+'</span>';
+
+  const fmtVal = v => v == null ? '—' : Math.round(v).toLocaleString('es-CL') + ' <span class="sn-u">mm</span>';
+
+  document.getElementById('pr-cur').innerHTML = fmtVal(cur);
+  document.getElementById('pr-avg').innerHTML = fmtVal(avg);
+  document.getElementById('pr-max').innerHTML = fmtVal(max);
+  document.getElementById('pr-cur-lbl').textContent = prLabel ? 'al ' + prLabel : '—';
+  document.getElementById('pr-avg-lbl').textContent = 'al ' + shortLabel;
+  document.getElementById('pr-max-season').textContent = maxSeason ? 'Temporada ' + maxSeason : '—';
+  document.getElementById('pr-max-lbl').textContent = 'al ' + shortLabel;
+
+  // % comparación actual vs promedio
+  const pctEl = document.getElementById('pr-avg-pct');
+  if (cur != null && avg != null && avg > 0) {
+    const pct = (cur - avg) / avg * 100;
+    const sign = pct >= 0 ? '▲' : '▼';
+    const cls  = pct >= 0 ? 'up' : 'down';
+    const dir  = pct >= 0 ? 'sobre' : 'bajo';
+    pctEl.className = 'sn-sub ' + cls;
+    pctEl.textContent = sign + ' ' + Math.abs(pct).toFixed(1) + '% ' + dir + ' promedio';
+  } else {
+    pctEl.className = 'sn-sub';
+    pctEl.textContent = '—';
+  }
 }
 
 // ── Precipitation: quarterly view ─────────────────────────
