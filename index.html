@@ -68,6 +68,16 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
 .variety-row.show{display:flex}
 .variety-row select{flex:1;padding:5px 8px;border:1.5px solid #E71873;border-radius:6px;
   font-size:11px;color:#1a2332;background:#fff;-webkit-appearance:auto}
+.variety-est{display:none;padding:5px 10px;background:#fff0f6;border-radius:7px;
+  font-size:clamp(9px,2.5vw,11px);line-height:1.5;color:#4a5568}
+.variety-est.show{display:block}
+.vest-row{display:flex;flex-wrap:wrap;gap:4px;align-items:baseline}
+.vest-lbl{font-weight:600;color:#718096}
+.vest-val{font-weight:700;color:#E71873}
+.vest-rate{color:#a0aec0;font-size:9px}
+.vest-ok{color:#2d8a4e;font-weight:700}
+.vest-no{color:#c0392b;font-weight:600}
+.vest-sep{color:#a0aec0;margin:0 2px}
 </style>
 </head>
 <body>
@@ -102,6 +112,7 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
     </div>
     <div class="df" id="df-hf"><div class="df-lbl">Fecha de corte</div><div id="filter-hf"></div></div>
     <div class="variety-section" id="vsect-hf">
+      <div class="variety-est" id="vest-hf"></div>
       <div class="variety-row" id="vrow-hf">
         <select id="vsel-hf" onchange="selectVariety('hf',this.value)">
           <option value="">— Sin referencia —</option>
@@ -162,6 +173,7 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
     </div>
     <div class="df" id="df-pf"><div class="df-lbl">Fecha de corte</div><div id="filter-pf"></div></div>
     <div class="variety-section" id="vsect-pf">
+      <div class="variety-est" id="vest-pf"></div>
       <div class="variety-row" id="vrow-pf">
         <select id="vsel-pf" onchange="selectVariety('pf',this.value)">
           <option value="">— Sin referencia —</option>
@@ -451,7 +463,93 @@ const barValuePlugin = {
     });
   }
 };
-Chart.register(barValuePlugin, varietyLinePlugin);
+// ── Plugin: requerimiento variedad en gráfico de líneas (horizontal) ─
+const varietyHLinePlugin = {
+  id: 'varietyHLine',
+  afterDatasetsDraw(chart) {
+    const cfg = chart.options.plugins?.varietyHLine;
+    if (!cfg || (cfg.value == null && cfg.min == null)) return;
+    const {ctx, chartArea, scales} = chart;
+    if (!scales.y) return;
+
+    const isRange = cfg.min != null && cfg.max != null;
+    ctx.save();
+
+    if (isRange) {
+      const yTop = scales.y.getPixelForValue(cfg.max);
+      const yBot = scales.y.getPixelForValue(cfg.min);
+      const yT = Math.max(Math.min(yTop, yBot), chartArea.top);
+      const yB = Math.min(Math.max(yTop, yBot), chartArea.bottom);
+      if (yT > chartArea.bottom || yB < chartArea.top) { ctx.restore(); return; }
+
+      // Banda sombreada
+      ctx.fillStyle = 'rgba(231,24,115,0.10)';
+      ctx.fillRect(chartArea.left, yT, chartArea.right - chartArea.left, yB - yT);
+
+      // Líneas de borde mín/máx
+      [yTop, yBot].forEach(yb => {
+        if (yb < chartArea.top || yb > chartArea.bottom) return;
+        ctx.beginPath();
+        ctx.moveTo(chartArea.left, yb);
+        ctx.lineTo(chartArea.right, yb);
+        ctx.strokeStyle = '#E71873';
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      });
+
+      // Etiqueta derecha centrada en la banda
+      ctx.font = 'bold 10px -apple-system,sans-serif';
+      const tw = ctx.measureText(cfg.label).width;
+      const padX = 6, padY = 3, r = 3;
+      const lh = 10 + padY * 2;
+      const lw = tw + padX * 2;
+      const lx = chartArea.right - lw - 4;
+      const lyCtr = (yT + yB) / 2;
+      const ly = Math.min(Math.max(lyCtr - lh / 2, chartArea.top + 2), chartArea.bottom - lh - 2);
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#E71873';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(lx, ly, lw, lh, r); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#E71873';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText(cfg.label, lx + padX, ly + lh / 2);
+
+    } else {
+      const y = scales.y.getPixelForValue(cfg.value);
+      if (y < chartArea.top || y > chartArea.bottom) { ctx.restore(); return; }
+
+      ctx.beginPath();
+      ctx.moveTo(chartArea.left, y);
+      ctx.lineTo(chartArea.right, y);
+      ctx.strokeStyle = '#E71873';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Etiqueta derecha sobre la línea
+      ctx.font = 'bold 10px -apple-system,sans-serif';
+      const tw = ctx.measureText(cfg.label).width;
+      const padX = 6, padY = 3, r = 3;
+      const lh = 10 + padY * 2;
+      const lw = tw + padX * 2;
+      const lx = chartArea.right - lw - 4;
+      const ly = Math.min(Math.max(y - lh - 3, chartArea.top + 2), chartArea.bottom - lh - 2);
+      ctx.fillStyle = '#fff';
+      ctx.strokeStyle = '#E71873';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.roundRect(lx, ly, lw, lh, r); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#E71873';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText(cfg.label, lx + padX, ly + lh / 2);
+    }
+    ctx.restore();
+  }
+};
+
+Chart.register(barValuePlugin, varietyLinePlugin, varietyHLinePlugin);
 
 // ── Top-label plugin (above/inside bars, responsive) ─────
 const topLabelPlugin = {
@@ -631,6 +729,13 @@ function drillIntoSeason(station, field, season) {
     };
   });
 
+  const vcfgLine = getVarietyConfig(selectedVariety[field], field);
+  const varietyVals = vcfgLine.value != null ? [vcfgLine.value]
+                    : vcfgLine.min  != null ? [vcfgLine.min, vcfgLine.max] : [];
+  const allDataVals = datasets.flatMap(ds => ds.data.filter(v => v != null));
+  const allYVals = [...allDataVals, ...varietyVals];
+  const yMin = allYVals.length ? Math.max(0, Math.min(...allYVals) - (field==='hf' ? 20 : 3)) : 0;
+
   const lineH = sz.barH * 4 + sz.barPad + 60;
   document.getElementById(wrapId).style.height = lineH + 'px';
 
@@ -645,7 +750,7 @@ function drillIntoSeason(station, field, season) {
         x: { ticks:{font:{size:sz.tickSz-1},color:'#718096',maxTicksLimit:8,maxRotation:0},
              grid:{color:'#f0f4f8'} },
         y: { beginAtZero: false,
-             min: Math.max(0, Math.min(...datasets.flatMap(ds => ds.data.filter(v => v != null))) - (field==='hf' ? 20 : 3)),
+             min: yMin,
              ticks:{font:{size:sz.tickSz-1},color:'#718096'},
              grid:{color:'#f0f4f8'},
              title:{display:true, text: field==='hf'?'Horas Frío (<7,2°C)':'Porciones frío',
@@ -688,6 +793,7 @@ function drillIntoSeason(station, field, season) {
         },
         barValues:{enabled:false},
         topLabels:{enabled:false},
+        varietyHLine: vcfgLine,
         tooltip:{callbacks:{
           label: i => ` ${i.dataset.label}: ${i.parsed.y!=null ? (field==='hf'?Math.round(i.parsed.y):i.parsed.y.toFixed(1)).toLocaleString('es-CL') : '—'}${unit}`
         }}
@@ -728,6 +834,77 @@ function toggleVarietyPanel(field) {
   }
 }
 
+function estimateVarietyDate(station, field) {
+  const el = document.getElementById('vest-' + field);
+  if (!el) return;
+  const name = selectedVariety[field];
+  if (!name) { el.className = 'variety-est'; el.innerHTML = ''; return; }
+
+  const vcfg = getVarietyConfig(name, field);
+  if (vcfg.value == null && vcfg.min == null) { el.className = 'variety-est'; return; }
+
+  const curSeason = D.last4[D.last4.length - 1];
+  const sd = D.bar_data[station];
+  if (!sd || !sd[curSeason]) { el.className = 'variety-est'; return; }
+
+  const lastTickLbl = D.last_hf_tick?.[station] || D.tick_labels[D.tick_labels.length - 1];
+  const lastIdx = D.tick_labels.indexOf(lastTickLbl);
+  const curVal = getVal(sd[curSeason][field], lastIdx);
+  if (curVal == null) { el.className = 'variety-est'; return; }
+
+  const meses = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  const fmtDate = d => d.getDate() + ' de ' + meses[d.getMonth()];
+  const unit = field === 'hf' ? 'horas' : 'porciones';
+  const curYear = parseInt(curSeason);
+
+  // Parse last tick date
+  const [dd, mm] = lastTickLbl.split('/');
+  const lastDate = new Date(curYear, parseInt(mm) - 1, parseInt(dd));
+  const endOfSeason = new Date(curYear, 7, 31); // 31 ago
+
+  // Tasa de acumulación: últimos 15 días (3 ticks de 5 días)
+  const lookback = Math.min(3, lastIdx);
+  const prevVal = lookback > 0 ? getVal(sd[curSeason][field], lastIdx - lookback) : null;
+  const ratePerDay = (prevVal != null && curVal > prevVal && lookback > 0)
+    ? (curVal - prevVal) / (lookback * 5) : null;
+
+  // Targets
+  const targets = vcfg.min != null
+    ? [{ label: 'mínimo', val: vcfg.min }, { label: 'máximo', val: vcfg.max }]
+    : [{ label: null, val: vcfg.value }];
+
+  let html = '';
+
+  // Si es rango y el máximo ya se superó, mostrar una sola línea
+  if (vcfg.max != null && curVal >= vcfg.max) {
+    el.className = 'variety-est show';
+    el.innerHTML = `<div class="vest-row"><span class="vest-ok">✓ Requerimiento cumplido</span></div>`;
+    return;
+  }
+
+  for (const t of targets) {
+    if (curVal >= t.val) {
+      html += `<div class="vest-row"><span class="vest-ok">✓ Requerimiento ${t.label} cumplido</span></div>`;
+      continue;
+    }
+    if (!ratePerDay || ratePerDay <= 0) {
+      html += `<div class="vest-row"><span class="vest-lbl">Cumplimiento proyectado${t.label ? ' (' + t.label + ')' : ''}:</span> <span class="vest-rate">tasa de acumulación insuficiente</span></div>`;
+      continue;
+    }
+    const daysNeeded = Math.ceil((t.val - curVal) / ratePerDay);
+    const estDate = new Date(lastDate.getTime() + daysNeeded * 86400000);
+    const lbl = t.label ? 'Cumplimiento proyectado (' + t.label + '):' : 'Cumplimiento proyectado:';
+    if (estDate > endOfSeason) {
+      html += `<div class="vest-row"><span class="vest-lbl">${lbl}</span> <span class="vest-no">no alcanzaría esta temporada</span></div>`;
+    } else {
+      html += `<div class="vest-row"><span class="vest-lbl">${lbl}</span> <span class="vest-val">${fmtDate(estDate)}</span> <span class="vest-rate">(${ratePerDay.toFixed(1)} ${unit}/día)</span></div>`;
+    }
+  }
+
+  el.className = 'variety-est show';
+  el.innerHTML = html;
+}
+
 function selectVariety(field, name) {
   ['hf','pf'].forEach(f => {
     selectedVariety[f] = name || null;
@@ -750,6 +927,8 @@ function selectVariety(field, name) {
       charts[cid].options.layout.padding.top = (vcfg.value != null || vcfg.min != null) ? 32 : 4;
       charts[cid].update();
     }
+    // Update estimate
+    estimateVarietyDate(currentStation, f);
   });
 }
 
@@ -1132,6 +1311,7 @@ function updateAll(station) {
     document.getElementById('lbl-'+f).textContent = 'Últimas 4 temporadas (1 may – 31 ago) — al '+lbl;
   });
   buildPrecipChart(station);
+  ['hf','pf'].forEach(f => estimateVarietyDate(station, f));
   document.getElementById('foot').textContent =
     'Actualizado: '+new Date().toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'});
 }
