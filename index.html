@@ -20,11 +20,12 @@ select:focus{outline:none;border-color:#E71873}
 .content{padding:12px 12px 28px;display:flex;flex-direction:column;gap:14px}
 .card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden}
 .ch{padding:12px 16px 8px;border-bottom:1px solid #f0f4f8;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.ch-left{flex:1;min-width:0}
-.ct{font-size:13px;font-weight:700;color:#1a2332}
+.ch-left{flex:1;min-width:0;text-align:center}
+.ct{font-size:13px;font-weight:700;color:#1a2332;text-transform:uppercase;letter-spacing:.3px}
 .cs{font-size:11px;color:#718096;margin-top:2px}
 .df{padding:10px 14px 12px;background:#fafbfc;border-bottom:1px solid #f0f4f8}
-.df-lbl{font-size:11px;font-weight:600;color:#4a5568;margin-bottom:8px}
+.df-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.df-lbl{font-size:11px;font-weight:600;color:#4a5568}
 .month-row{display:flex;gap:6px;flex-wrap:wrap}
 .mbtn{padding:5px 11px;border-radius:7px;font-size:11px;font-weight:700;cursor:pointer;
   background:#edf2f7;color:#4a5568;border:1.5px solid #e2e8f0;transition:all .15s;user-select:none}
@@ -101,7 +102,6 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
         <div class="ct">❄️ Horas frío acumuladas</div>
         <div class="cs" id="lbl-hf">Últimas 4 temporadas · rango 1 mayo – 31 agosto</div>
       </div>
-      <button class="variety-btn" id="vbtn-hf" onclick="toggleVarietyPanel('hf')">🍒 Req. variedad</button>
     </div>
     <div class="drill-row">
       <button class="back-btn" id="hf-back-btn" onclick="backToBar('hf')">
@@ -110,7 +110,13 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
       </button>
       <div class="drill-title" id="hf-drill-label"></div>
     </div>
-    <div class="df" id="df-hf"><div class="df-lbl">Fecha de corte</div><div id="filter-hf"></div></div>
+    <div class="df" id="df-hf">
+      <div class="df-header">
+        <div class="df-lbl">Fecha de corte</div>
+        <button class="variety-btn" id="vbtn-hf" onclick="toggleVarietyPanel('hf')">🍒 Req. variedad</button>
+      </div>
+      <div id="filter-hf"></div>
+    </div>
     <div class="variety-section" id="vsect-hf">
       <div class="variety-est" id="vest-hf"></div>
       <div class="variety-row" id="vrow-hf">
@@ -138,20 +144,20 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
     <div class="stats">
       <div class="st">
         <div class="sn-lbl">Temporada actual</div>
+        <div class="sn-date" id="hf-cur-lbl">—</div>
         <div class="sn-val" id="hf-cur">—</div>
-        <div class="sn-sub" id="hf-cur-lbl">—</div>
       </div>
       <div class="st">
         <div class="sn-lbl">Promedio histórico</div>
+        <div class="sn-date" id="hf-avg-lbl">—</div>
         <div class="sn-val" id="hf-avg">—</div>
         <div class="sn-sub" id="hf-avg-pct">—</div>
-        <div class="sn-date" id="hf-avg-lbl">—</div>
       </div>
       <div class="st">
         <div class="sn-lbl">Máximo histórico</div>
+        <div class="sn-date" id="hf-max-lbl">—</div>
         <div class="sn-val" id="hf-max">—</div>
         <div class="sn-sub" id="hf-max-season">—</div>
-        <div class="sn-date" id="hf-max-lbl">—</div>
       </div>
     </div>
   </div>
@@ -162,7 +168,6 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
         <div class="ct">🧊 Porciones frío acumuladas</div>
         <div class="cs" id="lbl-pf">Últimas 4 temporadas · rango 1 mayo – 31 agosto</div>
       </div>
-      <button class="variety-btn" id="vbtn-pf" onclick="toggleVarietyPanel('pf')">🍒 Req. variedad</button>
     </div>
     <div class="drill-row">
       <button class="back-btn" id="pf-back-btn" onclick="backToBar('pf')">
@@ -171,7 +176,13 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
       </button>
       <div class="drill-title" id="pf-drill-label"></div>
     </div>
-    <div class="df" id="df-pf"><div class="df-lbl">Fecha de corte</div><div id="filter-pf"></div></div>
+    <div class="df" id="df-pf">
+      <div class="df-header">
+        <div class="df-lbl">Fecha de corte</div>
+        <button class="variety-btn" id="vbtn-pf" onclick="toggleVarietyPanel('pf')">🍒 Req. variedad</button>
+      </div>
+      <div id="filter-pf"></div>
+    </div>
     <div class="variety-section" id="vsect-pf">
       <div class="variety-est" id="vest-pf"></div>
       <div class="variety-row" id="vrow-pf">
@@ -199,20 +210,20 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
     <div class="stats">
       <div class="st">
         <div class="sn-lbl">Temporada actual</div>
+        <div class="sn-date" id="pf-cur-lbl">—</div>
         <div class="sn-val" id="pf-cur">—</div>
-        <div class="sn-sub" id="pf-cur-lbl">—</div>
       </div>
       <div class="st">
         <div class="sn-lbl">Promedio histórico</div>
+        <div class="sn-date" id="pf-avg-lbl">—</div>
         <div class="sn-val" id="pf-avg">—</div>
         <div class="sn-sub" id="pf-avg-pct">—</div>
-        <div class="sn-date" id="pf-avg-lbl">—</div>
       </div>
       <div class="st">
         <div class="sn-lbl">Máximo histórico</div>
+        <div class="sn-date" id="pf-max-lbl">—</div>
         <div class="sn-val" id="pf-max">—</div>
         <div class="sn-sub" id="pf-max-season">—</div>
-        <div class="sn-date" id="pf-max-lbl">—</div>
       </div>
     </div>
   </div>
@@ -234,20 +245,20 @@ canvas{transform:translateZ(0);backface-visibility:hidden}
     <div class="stats">
       <div class="st">
         <div class="sn-lbl">Temporada actual</div>
+        <div class="sn-date" id="pr-cur-lbl">—</div>
         <div class="sn-val" id="pr-cur">—</div>
-        <div class="sn-sub" id="pr-cur-lbl">—</div>
       </div>
       <div class="st">
         <div class="sn-lbl">Promedio histórico</div>
+        <div class="sn-date" id="pr-avg-lbl">—</div>
         <div class="sn-val" id="pr-avg">—</div>
         <div class="sn-sub" id="pr-avg-pct">—</div>
-        <div class="sn-date" id="pr-avg-lbl">—</div>
       </div>
       <div class="st">
         <div class="sn-lbl">Máximo histórico</div>
+        <div class="sn-date" id="pr-max-lbl">—</div>
         <div class="sn-val" id="pr-max">—</div>
         <div class="sn-sub" id="pr-max-season">—</div>
-        <div class="sn-date" id="pr-max-lbl">—</div>
       </div>
     </div>
   </div>
@@ -815,7 +826,7 @@ function backToBar(field) {
   buildBarChart(canvasId, 'wrap-'+field, currentStation, field, idx);
   updateBarStats(currentStation, field);
   document.getElementById('lbl-'+field).textContent =
-    'Últimas 4 temporadas (1 may – 31 ago) — al ' + selDate[field];
+    'Últimas 4 temporadas (1 may – 31 ago)';
 }
 
 // ── Req. variedad: toggle panel y selección ───────────────
@@ -1037,7 +1048,7 @@ function buildDateFilter(containerId, field) {
         ['hf','pf'].forEach(f => {
           buildBarChart('ch-'+f,'wrap-'+f, currentStation, f, idx);
           updateBarStats(currentStation, f);
-          document.getElementById('lbl-'+f).textContent = 'Últimas 4 temporadas (1 may – 31 ago) — al '+lbl;
+          document.getElementById('lbl-'+f).textContent = 'Últimas 4 temporadas (1 may – 31 ago)';
         });
       });
       dayRow.appendChild(dbtn);
@@ -1068,7 +1079,7 @@ function buildDateFilter(containerId, field) {
         ['hf','pf'].forEach(f => {
           buildBarChart('ch-'+f,'wrap-'+f, currentStation, f, idx);
           updateBarStats(currentStation, f);
-          document.getElementById('lbl-'+f).textContent = 'Últimas 4 temporadas (1 may – 31 ago) — al '+bestLbl;
+          document.getElementById('lbl-'+f).textContent = 'Últimas 4 temporadas (1 may – 31 ago)';
         });
         // Sync the other filter
         const otherId = field==='hf' ? 'filter-pf' : 'filter-hf';
@@ -1308,12 +1319,52 @@ function updateAll(station) {
     const idx = D.tick_labels.indexOf(lbl);
     buildBarChart('ch-'+f,'wrap-'+f, station, f, idx);
     updateBarStats(station, f);
-    document.getElementById('lbl-'+f).textContent = 'Últimas 4 temporadas (1 may – 31 ago) — al '+lbl;
+    document.getElementById('lbl-'+f).textContent = 'Últimas 4 temporadas (1 may – 31 ago)';
   });
   buildPrecipChart(station);
   ['hf','pf'].forEach(f => estimateVarietyDate(station, f));
   document.getElementById('foot').textContent =
     'Actualizado: '+new Date().toLocaleDateString('es-CL',{day:'numeric',month:'long',year:'numeric'});
+}
+
+// ── Coordenadas aproximadas por estación ──────────────────
+const STATION_COORDS = {
+  'Chimbarongo':                [-34.72, -71.04],
+  'Codegua - Rancagua':         [-34.04, -70.70],
+  'El Carmen - San Fernando':   [-34.58, -71.02],
+  'El Tambo - San Vicente T.T': [-34.44, -71.09],
+  'Huelquen - Paine':           [-33.82, -70.74],
+  'Los Lingues':                [-34.60, -71.38],
+  'Nancagua':                   [-34.66, -71.20],
+  'Palmilla':                   [-34.57, -71.35],
+  'Peumo':                      [-34.40, -71.32],
+  'Placilla':                   [-34.63, -70.99],
+  'Quinta de Tilcoco':          [-34.35, -70.97],
+  'Roma - San Pedro':           [-34.62, -71.47],
+  'Roma - Taitao':              [-34.97, -71.22],
+  'Sagrada Familia':            [-35.00, -71.39],
+  'San Fernando':               [-34.59, -71.00],
+  'Santa Cruz':                 [-34.64, -71.37],
+  'Talcarehue':                 [-34.85, -71.14],
+  'Tinguiririca':               [-34.80, -71.10],
+};
+
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const R = 6371, toRad = x => x * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1), dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function getNearestStation(lat, lon) {
+  let best = D.stations[0], bestDist = Infinity;
+  D.stations.forEach(s => {
+    const c = STATION_COORDS[s];
+    if (!c) return;
+    const d = haversineKm(lat, lon, c[0], c[1]);
+    if (d < bestDist) { bestDist = d; best = s; }
+  });
+  return best;
 }
 
 // ── Init ──────────────────────────────────────────────────
@@ -1329,6 +1380,22 @@ sel.addEventListener('change', () => {
 buildDateFilter('filter-hf','hf');
 buildDateFilter('filter-pf','pf');
 updateAll(D.stations[0]);
+
+// Geolocalización: cambiar a la estación más cercana si el usuario acepta
+if (navigator.geolocation) {
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      const nearest = getNearestStation(pos.coords.latitude, pos.coords.longitude);
+      if (nearest !== currentStation) {
+        sel.value = nearest;
+        Object.keys(charts).forEach(k => { charts[k].destroy(); delete charts[k]; });
+        updateAll(nearest);
+      }
+    },
+    () => {}, // permiso denegado → mantener estación por defecto
+    { timeout: 6000, maximumAge: 300000 }
+  );
+}
 
 // Reconstruir gráficos al cambiar orientación / tamaño
 let resizeTimer;
